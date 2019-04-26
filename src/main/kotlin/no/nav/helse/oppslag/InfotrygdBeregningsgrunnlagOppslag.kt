@@ -11,9 +11,9 @@ import java.util.*
 class InfotrygdBeregningsgrunnlagOppslag(val sparkelUrl: String, val stsRestClient: StsRestClient) {
     private val log = LoggerFactory.getLogger(InfotrygdBeregningsgrunnlagOppslag::class.java.name)
 
-    fun hentInfotrygdBeregningsgrunnlag(aktorId: String, tom: LocalDate): Either<Exception, InfotrygdBeregningsgrunnlag> {
+    fun hentInfotrygdBeregningsgrunnlag(aktorId: String, fom: LocalDate, tom: LocalDate): Either<Exception, InfotrygdBeregningsgrunnlag> {
         val bearer = stsRestClient.token()
-        val (_, _, result) = "$sparkelUrl/api/infotrygdberegningsgrunnlag/$aktorId?tom=$tom&fom=${tom.minusYears(3)}".httpGet()
+        val (_, _, result) = "$sparkelUrl/api/infotrygdberegningsgrunnlag/$aktorId?tom=$tom&fom=$fom".httpGet()
                 .header(mapOf(
                         "Authorization" to "Bearer $bearer",
                         "Accept" to "application/json",
@@ -49,12 +49,17 @@ data class Behandlingstema(
 
 data class Periode(
     val fom: LocalDate?,
-    val tom: LocalDate?   // TODO: ser ut til at det forekommer tomme perioder. Da på toppnivå, så burde ha en annen type for toppnivå-periode
+    val tom: LocalDate?   // ser ut til at det forekommer tomme perioder. Da på toppnivå, så burde ha en annen type for toppnivå-periode
+)
+
+data class AnvistPeriode(
+    val fom: LocalDate,
+    val tom: LocalDate
 )
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 data class InfotrygdVedtak(
-        val anvistPeriode : Periode,
+        val anvistPeriode : AnvistPeriode,
         val utbetalingsgrad : Int)
 
 enum class InntektsPeriodeVerdi {
