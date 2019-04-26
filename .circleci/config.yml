@@ -60,7 +60,6 @@ jobs:
           if [ -z "${CIRCLE_PULL_REQUEST}" ] && [ "${CIRCLE_BRANCH}" = "master" ]; then
             export DOCKER_IMG_NAME=navikt/spinder
             export COMMIT_SHORT=$(git rev-parse --short HEAD)
-            npm run build
             docker build . -t $DOCKER_IMG_NAME:$COMMIT_SHORT
             echo "$DOCKER_PASSWORD" | docker login --username "$DOCKER_USERNAME" --password-stdin
             docker push $DOCKER_IMG_NAME:$COMMIT_SHORT
