@@ -39,4 +39,42 @@ jobs:
         key: v1-dependencies-{{ checksum "build.gradle.kts" }}
 
     # run tests!
-    - run: gradle test
+    - run: ./gradlew build
+
+    - run:
+        name: github creds
+        command: |
+          set -e
+          git clone https://github.com/navikt/github-apps-support.git
+          export PATH=`pwd`/github-apps-support/bin:$PATH
+          echo $HELSECI_KEY | tr '_' '\n' > helseci.key
+          export GITHUB_APP_ID=19726
+          export GH_TOKEN=$(generate-installation-token.sh `generate-jwt.sh helseci.key $GITHUB_APP_ID`)
+          echo -e "machine api.github.com login x-access-token password $GH_TOKEN" > ~/.netrc
+          rm helseci.key
+
+    - run:
+        name: build and push new version
+        command: |
+          set -e
+          if [ -z "${CIRCLE_PULL_REQUEST}" ] && [ "${CIRCLE_BRANCH}" = "master" ]; then
+            export DOCKER_IMG_NAME=navikt/spinder
+            export COMMIT_SHORT=$(git rev-parse --short HEAD)
+            npm run build
+            docker build . -t $DOCKER_IMG_NAME:$COMMIT_SHORT
+            echo "$DOCKER_PASSWORD" | docker login --username "$DOCKER_USERNAME" --password-stdin
+            docker push $DOCKER_IMG_NAME:$COMMIT_SHORT
+            docker create -v /nais --name naisyaml alpine:3.4 /bin/true
+            docker cp deploy/preprod.yaml naisyaml:/nais
+
+            PREPROD_NAISERATOR=$(docker run --volumes-from naisyaml mikefarah/yq yq r /nais/preprod.yaml -j)
+            PREPROD_NAISERATOR=$(echo $PREPROD_NAISERATOR | jq '.spec.image = "'$DOCKER_IMG_NAME':'$COMMIT_SHORT'"' -c)
+            PREPROD_DEPLOYMENT=$(cat deploy/deployreq.json | jq '.payload.kubernetes.resources += ['$PREPROD_NAISERATOR']')
+            PREPROD_DEPLOYMENT=$(echo $PREPROD_DEPLOYMENT | jq '.environment = "dev-fss"')
+            PREPROD_DEPLOYMENT=$(echo $PREPROD_DEPLOYMENT | jq '.ref = "'$COMMIT_SHORT'"')
+            curl -i -n \
+                 -X POST \
+                 -d "$PREPROD_DEPLOYMENT" \
+                 -H "Accept: application/vnd.github.ant-man-preview+json" \
+                 https://api.github.com/repos/navikt/helse-spinder/deployments
+          fi
