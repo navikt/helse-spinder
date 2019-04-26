@@ -24,6 +24,9 @@ jobs:
     steps:
     - checkout
 
+    - setup_remote_docker:
+        docker_layer_caching: true
+
     # Download and cache dependencies
     - restore_cache:
         keys:
@@ -39,7 +42,7 @@ jobs:
         key: v1-dependencies-{{ checksum "build.gradle.kts" }}
 
     # run tests!
-    - run: ./gradlew build
+    - run: ./gradlew build --no-daemon
 
     - run:
         name: github creds
