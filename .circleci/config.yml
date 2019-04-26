@@ -42,7 +42,7 @@ jobs:
         key: v1-dependencies-{{ checksum "build.gradle.kts" }}
 
     # run tests!
-    - run: ./gradlew build --no-daemon
+    - run: ./gradlew build
 
     - run:
         name: github creds
