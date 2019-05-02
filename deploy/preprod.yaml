@@ -35,4 +35,4 @@ spec:
   prometheus:
     enabled: true
     path: /metrics
-  secrets: true
+  secrets: false
