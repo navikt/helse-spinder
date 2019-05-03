@@ -7,6 +7,7 @@ val prometheusVersion = "0.5.0"
 val mainClass = "no.nav.helse.spinder.AppKt"
 val navStreamsVersion = "1a24b7e"
 val fuelVersion = "1.15.1"
+val arrowVersion = "0.9.0"
 
 plugins {
     java
@@ -30,6 +31,7 @@ dependencies {
     compile("io.prometheus:simpleclient_hotspot:$prometheusVersion")
     compile("no.nav.helse:streams:$navStreamsVersion")
     compile("com.github.kittinunf.fuel:fuel:$fuelVersion")
+    compile("io.arrow-kt:arrow-core-data:$arrowVersion")
 
     testCompile("org.junit.jupiter:junit-jupiter-api:$junitJupiterVersion")
     testRuntime("org.junit.jupiter:junit-jupiter-engine:$junitJupiterVersion")

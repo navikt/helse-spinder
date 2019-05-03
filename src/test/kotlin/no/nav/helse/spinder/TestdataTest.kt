@@ -1,14 +1,10 @@
 package no.nav.helse.spinder
 
 import com.fasterxml.jackson.module.kotlin.readValue
-import no.nav.helse.oppslag.Arbeidsforhold
 import no.nav.helse.oppslag.InfotrygdBeregningsgrunnlag
-import no.nav.helse.oppslag.InntektsPeriodeVerdi
 import no.nav.helse.streams.defaultObjectMapper
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
-import java.math.BigDecimal
-import java.math.RoundingMode
 
 class TestdataTest {
 

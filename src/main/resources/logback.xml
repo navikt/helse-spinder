@@ -6,6 +6,9 @@
 
    <logger name="no.nav.helse.probe" level="WARN" />
 
+   <logger name="VedtaksSammenlikner" level="TRACE" />
+
+
    <root level="DEBUG">
       <appender-ref ref="STDOUT_JSON"/>
    </root>

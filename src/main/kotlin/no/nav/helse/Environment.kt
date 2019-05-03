@@ -10,10 +10,7 @@ data class Environment(
         val navTruststorePassword: String? = getEnvVarOptional("NAV_TRUSTSTORE_PASSWORD"),
         val sparkelBaseUrl: String = getEnvVar("SPARKEL_BASE_URL", "http://sparkel"),
         val stsRestUrl: String = getEnvVar("SECURITY_TOKEN_SERVICE_REST_URL"),
-        val plainTextKafka: String? = getEnvVarOptional("PLAIN_TEXT_KAFKA"),
-
-        val sensuHostname: String = getEnvVar("SENSU_HOSTNAME", "sensu.nais"),
-        val sensuPort: Int = getEnvVar("SENSU_PORT", "3030").toInt()
+        val plainTextKafka: String? = getEnvVarOptional("PLAIN_TEXT_KAFKA")
 )
 
 private fun getEnvVar(varName: String, defaultValue: String? = null) =

@@ -13,7 +13,9 @@ data class BehandlingOK(
 data class Søknad(
     val id: String,
     val aktorId: String,
-    val type: String
+    val type: String,
+    val fom: LocalDate,
+    val tom: LocalDate
 )
 
 @JsonIgnoreProperties(ignoreUnknown = true)
