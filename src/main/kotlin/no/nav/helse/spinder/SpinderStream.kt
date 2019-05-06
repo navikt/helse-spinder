@@ -2,6 +2,7 @@ package no.nav.helse.spinder
 
 import arrow.core.Either
 import com.fasterxml.jackson.databind.JsonNode
+import io.prometheus.client.Counter
 import no.nav.helse.Environment
 import no.nav.helse.oppslag.InfotrygdBeregningsgrunnlagOppslag
 import no.nav.helse.oppslag.StsRestClient
@@ -25,6 +26,16 @@ class SpinderStream(val env: Environment) {
     private val consumer: StreamConsumer
 
     private val log = LoggerFactory.getLogger(SpinderStream::class.java.name)
+
+    private val MATCH = "match";
+    private val MISMATCH = "mismatch";
+    private val INGENDATA = "ingendata";
+
+    private val matcheCounter = Counter.build()
+        .name("spinder_match_attempts_totals")
+        .labelNames("resultat")
+        .help("antall matcheforsøk gjort, fordelt på $MATCH, $MISMATCH eller $INGENDATA (i.e: fant ikke vedtak i infotrygd)")
+        .register()
 
     private val infotrygd = InfotrygdBeregningsgrunnlagOppslag(env.sparkelBaseUrl, stsClient)
 
@@ -61,8 +72,10 @@ class SpinderStream(val env: Environment) {
                         )
                     }, { infotrygdBeregningsgrunnlag ->
                         sammenliknVedtak(infotrygdBeregningsgrunnlag, behandlingOk).bimap({
+                            matcheCounter.labels(if (it.feilArsaksType == SammenlikningsFeilÅrsak.INFOTRYGD_MANGLER_VEDTAK) INGENDATA else MISMATCH).inc()
                             log.info("VedtaksSammenlikningsFeil for søknadId=${behandlingOk.originalSøknad.id}: ${it}")
                         }, {
+                            matcheCounter.labels(MATCH).inc()
                             log.info("VedtaksSammenlikningsMatch for søknadId=${behandlingOk.originalSøknad.id}: ${it}")
                         })
                     })
