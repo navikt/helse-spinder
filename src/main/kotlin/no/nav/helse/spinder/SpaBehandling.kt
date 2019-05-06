@@ -2,11 +2,24 @@ package no.nav.helse.spinder
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import java.time.LocalDate
+import java.time.LocalDateTime
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 data class BehandlingOK(
     val originalSøknad:Søknad,
-    val vedtak:Vedtak
+    val vedtak:Vedtak,
+    val avklarteVerdier:AvklarteVerdier
+
+)
+
+@JsonIgnoreProperties(ignoreUnknown = true)
+data class AvklarteVerdier(
+    val medlemsskap:Medlemsskap
+)
+
+@JsonIgnoreProperties(ignoreUnknown = true)
+data class Medlemsskap(
+    val vurderingstidspunkt: LocalDateTime
 )
 
 @JsonIgnoreProperties(ignoreUnknown = true)

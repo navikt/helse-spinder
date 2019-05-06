@@ -51,6 +51,16 @@ class EndToEndTest {
         assertTrue(loggLinje.contains("PERIODE_ULIK_DAGSATS"))
     }
 
+    @Test
+    fun håndterSøppelMelding() {
+        restStsStub()
+        val logAppender = lagSpinderStreamLogAppender()
+
+        produceOneMessage("12345678901234567890", "{ \"blørrilørribu\" : 123123123 }")
+
+        assertEquals("SpaSykepengeVedtak deserialiserings feil", ventPåEnLoggLinje(logAppender))
+    }
+
     ////////////////////////////////////////////////////////////////
     ////////////////////////////////////////////////////////////////
     ////////////////////////////////////////////////////////////////

@@ -18,6 +18,7 @@ import org.apache.kafka.streams.StreamsConfig
 import org.apache.kafka.streams.Topology
 import org.apache.kafka.streams.errors.LogAndFailExceptionHandler
 import org.slf4j.LoggerFactory
+import java.time.LocalDateTime
 import java.util.*
 
 class SpinderStream(val env: Environment) {
@@ -63,6 +64,13 @@ class SpinderStream(val env: Environment) {
         )
     }
 
+    private fun skalSjekkes(behandlingOK: BehandlingOK) : Boolean {
+        val tidligst = LocalDateTime.now().minusWeeks(3)
+        val senest = LocalDateTime.now().minusDays(3)
+        val behandlet = behandlingOK.avklarteVerdier.medlemsskap.vurderingstidspunkt
+        return (behandlet >= tidligst && behandlet <= senest)
+    }
+
     private fun topology(): Topology {
         val builder = StreamsBuilder()
         builder.consumeTopic(VEDTAK_SYKEPENGER)
@@ -71,21 +79,26 @@ class SpinderStream(val env: Environment) {
                     matcheCounter.labels(SPA_VEDTAK_DESERIALISERINGSFEIL).inc()
                     log.error("SpaSykepengeVedtak deserialiserings feil", it)
                 }, { behandlingOk ->
-                    hentInfotrygdGrunnlagForBehanding(behandlingOk).bimap({
-                        matcheCounter.labels(INFOTRYGD_OPPSLAGSFEIL).inc()
-                        log.error(
-                            "Feil ved hentInfotrygdGrunnlagForBehanding for søknadId=${behandlingOk.originalSøknad.id}",
-                            it
-                        )
-                    }, { infotrygdBeregningsgrunnlag ->
-                        sammenliknVedtak(infotrygdBeregningsgrunnlag, behandlingOk).bimap({
-                            matcheCounter.labels(if (it.feilArsaksType == SammenlikningsFeilÅrsak.INFOTRYGD_MANGLER_VEDTAK) INGENDATA else MISMATCH).inc()
-                            log.info("VedtaksSammenlikningsFeil for søknadId=${behandlingOk.originalSøknad.id}: ${it}")
-                        }, {
-                            matcheCounter.labels(MATCH).inc()
-                            log.info("VedtaksSammenlikningsMatch for søknadId=${behandlingOk.originalSøknad.id}: ${it}")
+                    if (skalSjekkes(behandlingOk)) {
+                        hentInfotrygdGrunnlagForBehanding(behandlingOk).bimap({
+                            matcheCounter.labels(INFOTRYGD_OPPSLAGSFEIL).inc()
+                            log.error(
+                                "Feil ved hentInfotrygdGrunnlagForBehanding for søknadId=${behandlingOk.originalSøknad.id}",
+                                it
+                            )
+                        }, { infotrygdBeregningsgrunnlag ->
+                            sammenliknVedtak(infotrygdBeregningsgrunnlag, behandlingOk).bimap({
+                                matcheCounter.labels(if (it.feilArsaksType == SammenlikningsFeilÅrsak.INFOTRYGD_MANGLER_VEDTAK) INGENDATA else MISMATCH)
+                                    .inc()
+                                log.info("VedtaksSammenlikningsFeil for søknadId=${behandlingOk.originalSøknad.id}: ${it}")
+                            }, {
+                                matcheCounter.labels(MATCH).inc()
+                                log.info("VedtaksSammenlikningsMatch for søknadId=${behandlingOk.originalSøknad.id}: ${it}")
+                            })
                         })
-                    })
+                    } else {
+                        log.info("Behandlingstidpunkt utenfor tidsvindu: ${behandlingOk.avklarteVerdier.medlemsskap.vurderingstidspunkt}")
+                    }
                 })
             }
         return builder.build()
