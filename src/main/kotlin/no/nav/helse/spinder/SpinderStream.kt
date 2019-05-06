@@ -30,11 +30,13 @@ class SpinderStream(val env: Environment) {
     private val MATCH = "match";
     private val MISMATCH = "mismatch";
     private val INGENDATA = "ingendata";
+    private val SPA_VEDTAK_DESERIALISERINGSFEIL = "spa_vedtak_deserialiseringsfeil";
+    private val INFOTRYGD_OPPSLAGSFEIL = "infotrygd_oppslagsfeil";
 
     private val matcheCounter = Counter.build()
         .name("spinder_match_attempts_totals")
         .labelNames("resultat")
-        .help("antall matcheforsøk gjort, fordelt på $MATCH, $MISMATCH eller $INGENDATA (i.e: fant ikke vedtak i infotrygd)")
+        .help("antall matcheforsøk gjort, fordelt på $MATCH, $MISMATCH, $INGENDATA (i.e: fant ikke vedtak i infotrygd), $SPA_VEDTAK_DESERIALISERINGSFEIL, $INFOTRYGD_OPPSLAGSFEIL")
         .register()
 
     private val infotrygd = InfotrygdBeregningsgrunnlagOppslag(env.sparkelBaseUrl, stsClient)
@@ -63,9 +65,11 @@ class SpinderStream(val env: Environment) {
         builder.consumeTopic(VEDTAK_SYKEPENGER)
             .foreach { key, value ->
                 value.deserializeSpaSykepengeVedtak().bimap({
+                    matcheCounter.labels(SPA_VEDTAK_DESERIALISERINGSFEIL).inc()
                     log.error("SpaSykepengeVedtak deserialiserings feil", it)
                 }, { behandlingOk ->
                     hentInfotrygdGrunnlagForBehanding(behandlingOk).bimap({
+                        matcheCounter.labels(INFOTRYGD_OPPSLAGSFEIL).inc()
                         log.error(
                             "Feil ved hentInfotrygdGrunnlagForBehanding for søknadId=${behandlingOk.originalSøknad.id}",
                             it
