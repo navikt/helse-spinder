@@ -9,7 +9,7 @@
    <logger name="VedtaksSammenlikner" level="TRACE" />
 
 
-   <root level="DEBUG">
+   <root level="INFO">
       <appender-ref ref="STDOUT_JSON"/>
    </root>
 </configuration>
