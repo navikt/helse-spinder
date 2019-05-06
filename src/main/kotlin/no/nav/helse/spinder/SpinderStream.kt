@@ -6,8 +6,11 @@ import io.prometheus.client.Counter
 import no.nav.helse.Environment
 import no.nav.helse.oppslag.InfotrygdBeregningsgrunnlagOppslag
 import no.nav.helse.oppslag.StsRestClient
-import no.nav.helse.streams.*
+import no.nav.helse.streams.StreamConsumer
 import no.nav.helse.streams.Topics.VEDTAK_SYKEPENGER
+import no.nav.helse.streams.consumeTopic
+import no.nav.helse.streams.defaultObjectMapper
+import no.nav.helse.streams.streamConfig
 import org.apache.kafka.clients.consumer.ConsumerConfig
 import org.apache.kafka.streams.KafkaStreams
 import org.apache.kafka.streams.StreamsBuilder
@@ -47,7 +50,7 @@ class SpinderStream(val env: Environment) {
             env.kafkaUsername to env.kafkaPassword,
             env.navTruststorePath to env.navTruststorePassword
         )
-        consumer = StreamConsumer(appId, KafkaStreams(topology(), streamConfig))
+        consumer = StreamConsumer(appId, KafkaStreams(topology(), streamConfig), env.httpPort)
     }
 
     private fun streamConfigPlainTextKafka(): Properties = Properties().apply {

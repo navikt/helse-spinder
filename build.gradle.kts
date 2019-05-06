@@ -36,6 +36,10 @@ dependencies {
     testCompile("org.junit.jupiter:junit-jupiter-api:$junitJupiterVersion")
     testRuntime("org.junit.jupiter:junit-jupiter-engine:$junitJupiterVersion")
     testCompile("org.assertj:assertj-core:$assertJVersion")
+    testCompile ("no.nav:kafka-embedded-env:2.0.1")
+    testCompile("com.github.tomakehurst:wiremock:2.19.0") {
+        exclude(group = "junit")
+    }
 
 }
 
