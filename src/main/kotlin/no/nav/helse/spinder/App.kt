@@ -10,6 +10,7 @@ import io.ktor.server.engine.embeddedServer
 import io.ktor.server.netty.Netty
 import io.prometheus.client.CollectorRegistry
 import io.prometheus.client.exporter.common.TextFormat
+import no.nav.helse.Environment
 import org.slf4j.LoggerFactory
 
 
@@ -19,12 +20,9 @@ private val collectorRegistry: CollectorRegistry = CollectorRegistry.defaultRegi
 fun main() {
     log.info("Spinder starter.")
     naisHttpChecks().start()
-    Thread({
-        while (true) {
-            Thread.sleep(30000);
-            log.info("Spinder still alive")
-        }
-    }).start()
+    val spinder = SpinderStream(Environment())
+    log.info("The Spinder is open for E-Match")
+    spinder.start()
 }
 
 private inline fun naisHttpChecks() =
