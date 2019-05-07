@@ -32,27 +32,39 @@ fun sammenliknVedtaksPerioder(infotrygd: PeriodeYtelse, spa: Vedtak) : Either<Ve
         SammenlikningsFeilÅrsak.INFOTRYGD_IKKE_ETT_ARBEIDSFORHOLD, "fikk flere eller ingen arbeidsforhold: ${infotrygd.arbeidsforholdListe?.size}"
     ))
 
-    val infotrygdDagsats100 = dagsatsAvÅrsinntekt(årsinntekt(infotrygd.arbeidsforholdListe.first()))
+    årsinntekt(infotrygd.arbeidsforholdListe.first()).bimap({ feilmelding ->
+        return Either.Left(vedtakSammenlikningsFeilMetered(SammenlikningsFeilÅrsak.FORSTÅR_IKKE_DATA, feilmelding))
+    }, {årsinntekt ->
+        val infotrygdDagsats100 = dagsatsAvÅrsinntekt(årsinntekt)
 
-    val infotrygdTilUtbetaling = infotrygd.vedtakListe.filter { it.utbetalingsgrad != null && it.utbetalingsgrad > 0 }
-    val spaTilUtbetaling = spa.perioder.filter { it.dagsats > 0 }
+        val infotrygdTilUtbetaling =
+            infotrygd.vedtakListe.filter { it.utbetalingsgrad != null && it.utbetalingsgrad > 0 }
+        val spaTilUtbetaling = spa.perioder.filter { it.dagsats > 0 }
 
-    if (infotrygdTilUtbetaling.size != spaTilUtbetaling.size) {
-        return Either.Left(vedtakSammenlikningsFeilMetered(
-            SammenlikningsFeilÅrsak.ULIKT_ANTALL_PERIODER_TIL_UTBETALING, // TODO: Kan fortsatt være interessant å sammenlikne innholdet
-            "infotrygd har ${infotrygdTilUtbetaling.size} perioder mens spa har ${spaTilUtbetaling.size}"))
-    }
+        if (infotrygdTilUtbetaling.size != spaTilUtbetaling.size) {
+            return Either.Left(
+                vedtakSammenlikningsFeilMetered(
+                    SammenlikningsFeilÅrsak.ULIKT_ANTALL_PERIODER_TIL_UTBETALING, // TODO: Kan fortsatt være interessant å sammenlikne innholdet
+                    "infotrygd har ${infotrygdTilUtbetaling.size} perioder mens spa har ${spaTilUtbetaling.size}"
+                )
+            )
+        }
 
-    val periodeResultater = infotrygdTilUtbetaling.zip(spaTilUtbetaling).map { sammenliknPeriode(PeriodeSammenlikningsGrunnlag(it.first, infotrygdDagsats100, it.second)) }
+        val periodeResultater = infotrygdTilUtbetaling.zip(spaTilUtbetaling)
+            .map { sammenliknPeriode(PeriodeSammenlikningsGrunnlag(it.first, infotrygdDagsats100, it.second)) }
 
-    if (periodeResultater.any { it.isLeft() }) {
-        return Either.Left(vedtakSammenlikningsFeilMetered(SammenlikningsFeilÅrsak.VEDTAK_FOR_PERIODENE_MATCHER_IKKE, "en eller flere av perioden mather ikke",
-            periodeResultater.filter {it.isLeft()}.map {
-                (it as Either.Left).a
-            }))
-    }
+        if (periodeResultater.any { it.isLeft() }) {
+            return Either.Left(vedtakSammenlikningsFeilMetered(SammenlikningsFeilÅrsak.VEDTAK_FOR_PERIODENE_MATCHER_IKKE,
+                "en eller flere av perioden mather ikke",
+                periodeResultater.filter { it.isLeft() }.map {
+                    (it as Either.Left).a
+                })
+            )
+        }
 
-    return Either.Right(VedtaksSammenlikningsMatch())
+        return Either.Right(VedtaksSammenlikningsMatch())
+    })
+    return Either.Left(VedtaksSammenlikningsFeil(SammenlikningsFeilÅrsak.LOGIKK_FEIL, "shouldnt be here (sammenliknVedtaksPerioder)")) // FIXME
 }
 
 data class PeriodeSammenlikningsGrunnlag(
@@ -111,7 +123,9 @@ enum class SammenlikningsFeilÅrsak {
     VEDTAK_FOR_PERIODE_MATCHER_IKKE,
     PERIODE_ULIK_FOM,
     PERIODE_ULIK_TOM,
-    PERIODE_ULIK_DAGSATS
+    PERIODE_ULIK_DAGSATS,
+    FORSTÅR_IKKE_DATA,
+    LOGIKK_FEIL
 }
 
 fun graderDagsats(dagsats: Long, utbetalingsgrad: Int) = BigDecimal.valueOf(dagsats * utbetalingsgrad)
@@ -122,12 +136,12 @@ fun dagsatsAvÅrsinntekt(årsinntekt : Long) = BigDecimal.valueOf(årsinntekt)
     .divide(BigDecimal(arbeidsdagerPrÅr), 0, RoundingMode.HALF_UP)
     .longValueExact()
 
-fun årsinntekt(arbeidsforhold: Arbeidsforhold) : Long =
+fun årsinntekt(arbeidsforhold: Arbeidsforhold) : Either<String, Long> =
     when (arbeidsforhold.inntektsPeriode.value) {
-        InntektsPeriodeVerdi.M -> arbeidsforhold.inntektForPerioden * 12L
-        InntektsPeriodeVerdi.D -> arbeidsforhold.inntektForPerioden * arbeidsdagerPrÅr.toLong()
-        InntektsPeriodeVerdi.Å -> arbeidsforhold.inntektForPerioden.toLong()
-        InntektsPeriodeVerdi.U -> arbeidsforhold.inntektForPerioden * 52L // ??
-        InntektsPeriodeVerdi.F -> arbeidsforhold.inntektForPerioden * 26L // ??
-        else -> throw Exception("Fikk inntektsperiode: " + arbeidsforhold.inntektsPeriode.value)
+        InntektsPeriodeVerdi.M -> Either.Right(arbeidsforhold.inntektForPerioden * 12L)
+        InntektsPeriodeVerdi.D -> Either.Right(arbeidsforhold.inntektForPerioden * arbeidsdagerPrÅr.toLong())
+        InntektsPeriodeVerdi.Å -> Either.Right(arbeidsforhold.inntektForPerioden.toLong())
+        InntektsPeriodeVerdi.U -> Either.Right(arbeidsforhold.inntektForPerioden * 52L) // ??
+        InntektsPeriodeVerdi.F -> Either.Right(arbeidsforhold.inntektForPerioden * 26L) // ??
+        else -> Either.Left("Fikk inntektsperiode: ${arbeidsforhold.inntektsPeriode.value}")
     }
