@@ -21,11 +21,9 @@ import org.slf4j.LoggerFactory
 import java.time.LocalDateTime
 import java.util.*
 
-class SpinderStream(val env: Environment) {
+class SpinderStream(val env: Environment, private val appId : String) {
 
     private val stsClient = StsRestClient(baseUrl = env.stsRestUrl, username = env.username, password = env.password)
-
-    private val appId = "spinder-avstemmer-1"
 
     private val consumer: StreamConsumer
 

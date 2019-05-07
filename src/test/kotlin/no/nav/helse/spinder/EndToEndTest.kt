@@ -115,7 +115,7 @@ class EndToEndTest {
                 stsRestUrl = server.baseUrl()
             )
 
-            app = SpinderStream(env)
+            app = SpinderStream(env, "spinder_e2e")
             app.start()
         }
 
