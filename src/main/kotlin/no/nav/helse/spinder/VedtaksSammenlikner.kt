@@ -24,8 +24,14 @@ private val inntektsPeriodeVerdiCounter = Counter.build()
 
 private val arbeidsforholdPerInntektHistogram = Histogram.build()
     .buckets(0.0, 1.0, 2.0, 3.0, 4.0, 5.0, 10.0)
-    .name("arbeidsforhold_per_inntekt_sizes")
+    .name("spinder_arbeidsforhold_per_inntekt_sizes")
     .help("fordeling over hvor mange potensielle arbeidsforhold en inntekt har")
+    .register()
+
+private val dagsatsAvvikHistogram = Histogram.build()
+    .buckets(0.0, 5.0, 10.0, 20.0, 30.0, 40.0, 50.0, 100.0, 200.0, 300.0, 400.0, 500.0, 750.0, 1000.0, 1500.0)
+    .name("spinder_dagsats_avvik_sizes")
+    .help("fordeling over dagsatsavvik mellom infotrygd og spa")
     .register()
 
 fun sammenliknVedtak(
@@ -155,12 +161,16 @@ fun sammenliknPeriode(grunnlag: PeriodeSammenlikningsGrunnlag): Either<VedtaksSa
 
 
 
-    if (infotrygdGradertDagsats != grunnlag.spaVedtak.dagsats) underFeil.add(
-        vedtakSammenlikningsFeilMetered(
-            SammenlikningsFeilÅrsak.PERIODE_ULIK_DAGSATS,
-            "$infotrygdGradertDagsats ({${grunnlag.infotrygdVedtak.utbetalingsgrad} av ${grunnlag.infotrygdDagsats100}) != ${grunnlag.spaVedtak.dagsats}"
+    if (infotrygdGradertDagsats != grunnlag.spaVedtak.dagsats) {
+        val avvik = Math.abs(infotrygdGradertDagsats - grunnlag.spaVedtak.dagsats)
+        dagsatsAvvikHistogram.observe(avvik.toDouble())
+        underFeil.add(
+            vedtakSammenlikningsFeilMetered(
+                SammenlikningsFeilÅrsak.PERIODE_ULIK_DAGSATS,
+                "$infotrygdGradertDagsats ({${grunnlag.infotrygdVedtak.utbetalingsgrad} av ${grunnlag.infotrygdDagsats100}) != ${grunnlag.spaVedtak.dagsats}"
+            )
         )
-    )
+    }
 
     if (grunnlag.infotrygdVedtak.anvistPeriode.fom != grunnlag.spaVedtak.fom) underFeil.add(
         vedtakSammenlikningsFeilMetered(
