@@ -60,7 +60,7 @@ data class AnvistPeriode(
 @JsonIgnoreProperties(ignoreUnknown = true)
 data class InfotrygdVedtak(
         val anvistPeriode : AnvistPeriode,
-        val utbetalingsgrad : Int)
+        val utbetalingsgrad : Int?)
 
 enum class InntektsPeriodeVerdi {
     Å, M, F, U, D, X

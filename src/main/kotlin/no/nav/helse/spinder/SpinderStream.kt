@@ -72,7 +72,7 @@ class SpinderStream(val env: Environment, private val appId : String) {
     private fun topology(): Topology {
         val builder = StreamsBuilder()
         builder.consumeTopic(VEDTAK_SYKEPENGER)
-            .foreach { key, value ->
+            .foreach { _, value ->
                 value.deserializeSpaSykepengeVedtak().bimap({
                     matcheCounter.labels(SPA_VEDTAK_DESERIALISERINGSFEIL).inc()
                     log.error("SpaSykepengeVedtak deserialiserings feil", it)

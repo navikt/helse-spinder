@@ -123,15 +123,15 @@ class VedtakSammenliknerTest {
         )
         assertEquals(
             SammenlikningsFeilÅrsak.VEDTAK_FOR_PERIODE_MATCHER_IKKE,
-            (sammenlikningsResultat as Either.Left).a.underFeil.first().feilArsaksType
+            sammenlikningsResultat.a.underFeil.first().feilArsaksType
         )
         assertEquals(
             SammenlikningsFeilÅrsak.PERIODE_ULIK_FOM,
-            (sammenlikningsResultat as Either.Left).a.underFeil.first().underFeil.first().feilArsaksType
+            sammenlikningsResultat.a.underFeil.first().underFeil.first().feilArsaksType
         )
         assertEquals(
             SammenlikningsFeilÅrsak.PERIODE_ULIK_TOM,
-            (sammenlikningsResultat as Either.Left).a.underFeil.first().underFeil[1].feilArsaksType
+            sammenlikningsResultat.a.underFeil.first().underFeil[1].feilArsaksType
         )
 
         assertEquals(
@@ -165,11 +165,11 @@ class VedtakSammenliknerTest {
         )
         assertEquals(
             SammenlikningsFeilÅrsak.VEDTAK_FOR_PERIODE_MATCHER_IKKE,
-            (sammenlikningsResultat as Either.Left).a.underFeil.first().feilArsaksType
+            sammenlikningsResultat.a.underFeil.first().feilArsaksType
         )
         assertEquals(
             SammenlikningsFeilÅrsak.PERIODE_ULIK_DAGSATS,
-            (sammenlikningsResultat as Either.Left).a.underFeil.first().underFeil.first().feilArsaksType
+            sammenlikningsResultat.a.underFeil.first().underFeil.first().feilArsaksType
         )
 
         assertEquals(

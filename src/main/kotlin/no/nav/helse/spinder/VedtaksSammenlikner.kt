@@ -33,7 +33,7 @@ fun sammenliknVedtak(
     spabehandling: BehandlingOK
 ): Either<VedtaksSammenlikningsFeil, VedtaksSammenlikningsMatch> {
 
-    if (infotrygdVedtak.sykepengerListe == null || infotrygdVedtak.sykepengerListe.isEmpty()) return Either.Left(
+    if (infotrygdVedtak.sykepengerListe.isEmpty()) return Either.Left(
         vedtakSammenlikningsFeilMetered(
             SammenlikningsFeilÅrsak.INFOTRYGD_MANGLER_VEDTAK, "sykepengeliste er tom"
         )
@@ -53,17 +53,16 @@ fun sammenliknVedtaksPerioder(
     infotrygd: PeriodeYtelse,
     spa: Vedtak
 ): Either<VedtaksSammenlikningsFeil, VedtaksSammenlikningsMatch> {
-    if (infotrygd.arbeidsforholdListe == null || infotrygd.arbeidsforholdListe.isEmpty()) return Either.Left(
+    if (infotrygd.arbeidsforholdListe.isEmpty()) return Either.Left(
         vedtakSammenlikningsFeilMetered(
             SammenlikningsFeilÅrsak.INFOTRYGD_INGEN_ARBEIDSFORHOLD,
-            "fikk ingen arbeidsforhold: ${infotrygd.arbeidsforholdListe?.size}"
+            "fikk ingen arbeidsforhold: ${infotrygd.arbeidsforholdListe.size}"
         )
     )
 
     årsinntekt(infotrygd.arbeidsforholdListe).bimap({ feilmelding ->
         return Either.Left(vedtakSammenlikningsFeilMetered(SammenlikningsFeilÅrsak.FORSTÅR_IKKE_DATA, feilmelding))
     }, { årsinntekt ->
-        val infotrygdDagsats100 = dagsatsAvÅrsinntekt(cap6G(årsinntekt, spa.perioder.first().fom))
 
         var infotrygdTilUtbetaling =
             infotrygd.vedtakListe.filter { it.utbetalingsgrad != null && it.utbetalingsgrad > 0 }
@@ -72,10 +71,19 @@ fun sammenliknVedtaksPerioder(
         if (infotrygdTilUtbetaling.isEmpty()) return Either.Left(
             vedtakSammenlikningsFeilMetered(
                 SammenlikningsFeilÅrsak.INFOTRYGD_INGEN_UTBETALINGSPERIODER,
-                "fant ingen utbetalingsperioder med utbetalingsgrad > 0",
+                "fant ingen infotrygd-utbetalingsperioder med utbetalingsgrad > 0",
                 grunnlag = infotrygd.vedtakListe.toString()
             )
         )
+        if (spaTilUtbetaling.isEmpty()) return Either.Left(
+            vedtakSammenlikningsFeilMetered(
+                SammenlikningsFeilÅrsak.SPA_INGEN_UTBETALINGSPERIODER,
+                "fant ingen spa-utbetalingsperioder med dagsats > 0",
+                grunnlag = spa.perioder.toString()
+            )
+        )
+
+        val infotrygdDagsats100 = dagsatsAvÅrsinntekt(cap6G(årsinntekt, spa.perioder.first().fom))
 
         if (infotrygdTilUtbetaling.size != spaTilUtbetaling.size) {
             val sammenslåttInfotrygdVedtak = slåSammenInfotrygdVedtak(infotrygdTilUtbetaling)
@@ -142,7 +150,7 @@ fun slåSammenInfotrygdVedtak(vedtaksListe : List<InfotrygdVedtak>) : Either<Ved
 
 
 fun sammenliknPeriode(grunnlag: PeriodeSammenlikningsGrunnlag): Either<VedtaksSammenlikningsFeil, VedtaksSammenlikningsMatch> {
-    val infotrygdGradertDagsats = graderDagsats(grunnlag.infotrygdDagsats100, grunnlag.infotrygdVedtak.utbetalingsgrad)
+    val infotrygdGradertDagsats = graderDagsats(grunnlag.infotrygdDagsats100, grunnlag.infotrygdVedtak.utbetalingsgrad?: 0)
     val underFeil: MutableList<VedtaksSammenlikningsFeil> = mutableListOf()
 
 
@@ -211,6 +219,7 @@ enum class SammenlikningsFeilÅrsak {
     INFOTRYGD_FLERE_GRADERINGER_I_VEDTAK,
     INFOTRYGD_INGEN_ARBEIDSFORHOLD,
     INFOTRYGD_INGEN_UTBETALINGSPERIODER,
+    SPA_INGEN_UTBETALINGSPERIODER,
     ULIKT_ANTALL_PERIODER_TIL_UTBETALING,
     VEDTAK_FOR_PERIODENE_MATCHER_IKKE,
     VEDTAK_FOR_PERIODE_MATCHER_IKKE,
