@@ -52,12 +52,12 @@ fun sammenliknVedtaksPerioder(
     infotrygd: PeriodeYtelse,
     spa: Vedtak
 ): Either<VedtaksSammenlikningsFeil, VedtaksSammenlikningsMatch> {
-    /*if (infotrygd.arbeidsforholdListe == null || infotrygd.arbeidsforholdListe.size != 1) return Either.Left(
+    if (infotrygd.arbeidsforholdListe == null || infotrygd.arbeidsforholdListe.isEmpty()) return Either.Left(
         vedtakSammenlikningsFeilMetered(
-            SammenlikningsFeilÅrsak.INFOTRYGD_IKKE_ETT_ARBEIDSFORHOLD,
-            "fikk flere eller ingen arbeidsforhold: ${infotrygd.arbeidsforholdListe?.size}"
+            SammenlikningsFeilÅrsak.INFOTRYGD_INGEN_ARBEIDSFORHOLD,
+            "fikk ingen arbeidsforhold: ${infotrygd.arbeidsforholdListe?.size}"
         )
-    )*/
+    )
 
     årsinntekt(infotrygd.arbeidsforholdListe).bimap({ feilmelding ->
         return Either.Left(vedtakSammenlikningsFeilMetered(SammenlikningsFeilÅrsak.FORSTÅR_IKKE_DATA, feilmelding))
@@ -200,6 +200,7 @@ enum class SammenlikningsFeilÅrsak {
     INFOTRYGD_IKKE_ETT_ARBEIDSFORHOLD,
     INFOTRYGD_HULL_I_VEDTAKSPERIODE,
     INFOTRYGD_FLERE_GRADERINGER_I_VEDTAK,
+    INFOTRYGD_INGEN_ARBEIDSFORHOLD,
     ULIKT_ANTALL_PERIODER_TIL_UTBETALING,
     VEDTAK_FOR_PERIODENE_MATCHER_IKKE,
     VEDTAK_FOR_PERIODE_MATCHER_IKKE,
@@ -218,7 +219,7 @@ fun dagsatsAvÅrsinntekt(årsinntekt: Long) = BigDecimal.valueOf(årsinntekt)
     .divide(BigDecimal(arbeidsdagerPrÅr), 0, RoundingMode.HALF_UP)
     .longValueExact()
 
-fun årsinntekt(arbeidsforholdListe: List<Arbeidsforhold>): Either<String, Long> =  // TODO: metrics for antall arbeidsforhold
+fun årsinntekt(arbeidsforholdListe: List<Arbeidsforhold>): Either<String, Long> = // TODO: metrics for antall arbeidsforhold
     Either.right(
         arbeidsforholdListe.map { arbeidsforhold ->
             inntektsPeriodeVerdiCounter.labels(arbeidsforhold.inntektsPeriode.value.toString()).inc()

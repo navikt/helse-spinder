@@ -31,6 +31,26 @@ class VedtakSammenliknerTest {
     }
 
     @Test
+    fun test_IngenArbeidsforholdIInfotrygdVedtak() {
+        val infotrygd: InfotrygdBeregningsgrunnlag = defaultObjectMapper.readValue(
+            InfotrygdBeregningsgrunnlag::class.java.classLoader.getResourceAsStream("infotrygd_oppslag_ingen_arbeidsforhold.json")
+        )
+
+        val behandling: BehandlingOK = defaultObjectMapper.readValue(
+            Vedtak::class.java.classLoader.getResourceAsStream("vedtak_1.json")
+        )
+
+        val sammenlikningsResultat = sammenliknVedtak(infotrygd, behandling)
+        doLog(sammenlikningsResultat, behandling)
+
+        assertTrue(sammenlikningsResultat.isLeft())
+        assertEquals(
+            SammenlikningsFeilÅrsak.INFOTRYGD_INGEN_ARBEIDSFORHOLD,
+            (sammenlikningsResultat as Either.Left).a.feilArsaksType
+        )
+    }
+
+    @Test
     fun testMatchSelvOmFlereArbeidsforholdIInfotrygd() {
         val infotrygd: InfotrygdBeregningsgrunnlag = defaultObjectMapper.readValue(
             InfotrygdBeregningsgrunnlag::class.java.classLoader.getResourceAsStream("infotrygd_oppslag_1_match_men_fordelt_paa_to_arbeidsforhold.json")

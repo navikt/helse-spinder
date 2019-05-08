@@ -1,0 +1,33 @@
+{
+  "paaroerendeSykdomListe": [],
+  "engangstoenadListe": [],
+  "sykepengerListe": [
+    {
+      "arbeidsforholdListe": [
+      ],
+      "behandlingstema": {
+        "kodeverksRef": "https://confluence.adeo.no/display/INFOTRYGD/Kodeverk+IS-basen",
+        "value": "SP"
+      },
+      "vedtakListe": [
+        {
+          "utbetalingsgrad": 100,
+          "anvistPeriode": {
+            "tom": "2019-03-22",
+            "fom": "2019-02-25"
+          }
+        }
+      ],
+      "arbeidskategori": {
+        "kodeverksRef": "https://confluence.adeo.no/display/INFOTRYGD/Kodeverk+IS-basen",
+        "value": "01"
+      },
+      "identdato": "2019-02-03",
+      "periode": {
+        "tom": "2019-03-22",
+        "fom": "2019-02-25"
+      }
+    }
+  ],
+  "foreldrepengerListe": []
+}
