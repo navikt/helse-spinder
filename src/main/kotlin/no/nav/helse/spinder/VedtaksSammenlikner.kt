@@ -45,7 +45,8 @@ fun sammenliknVedtaksPerioder(infotrygd: PeriodeYtelse, spa: Vedtak) : Either<Ve
             return Either.Left(
                 vedtakSammenlikningsFeilMetered(
                     SammenlikningsFeilÅrsak.ULIKT_ANTALL_PERIODER_TIL_UTBETALING, // TODO: Kan fortsatt være interessant å sammenlikne innholdet
-                    "infotrygd har ${infotrygdTilUtbetaling.size} perioder mens spa har ${spaTilUtbetaling.size}"
+                    "infotrygd har ${infotrygdTilUtbetaling.size} perioder mens spa har ${spaTilUtbetaling.size}",
+                    grunnlag = "infotrygd (100% dagsats = $infotrygdDagsats100): " + infotrygdTilUtbetaling.toString() + ", spa: " + spaTilUtbetaling.toString()
                 )
             )
         }
