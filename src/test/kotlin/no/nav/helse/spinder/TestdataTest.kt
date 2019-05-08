@@ -19,7 +19,7 @@ class TestdataTest {
 
         assertEquals(infotrygd.sykepengerListe[0].vedtakListe[0].anvistPeriode.fom, behandling.vedtak.perioder[0].fom)
         assertEquals(infotrygd.sykepengerListe[0].vedtakListe[0].anvistPeriode.tom, behandling.vedtak.perioder[0].tom)
-        assertEquals(dagsatsAvÅrsinntekt((årsinntekt(infotrygd.sykepengerListe[0].arbeidsforholdListe[0]) as Either.Right).b), behandling.vedtak.perioder[0].dagsats)
+        assertEquals(dagsatsAvÅrsinntekt((årsinntekt(infotrygd.sykepengerListe[0].arbeidsforholdListe) as Either.Right).b), behandling.vedtak.perioder[0].dagsats)
     }
 
 }
