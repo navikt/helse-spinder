@@ -6,6 +6,7 @@ import io.prometheus.client.Histogram
 import no.nav.helse.oppslag.*
 import java.math.BigDecimal
 import java.math.RoundingMode
+import java.time.LocalDate
 
 val arbeidsdagerPrÅr = 260
 
@@ -62,11 +63,19 @@ fun sammenliknVedtaksPerioder(
     årsinntekt(infotrygd.arbeidsforholdListe).bimap({ feilmelding ->
         return Either.Left(vedtakSammenlikningsFeilMetered(SammenlikningsFeilÅrsak.FORSTÅR_IKKE_DATA, feilmelding))
     }, { årsinntekt ->
-        val infotrygdDagsats100 = dagsatsAvÅrsinntekt(årsinntekt)
+        val infotrygdDagsats100 = dagsatsAvÅrsinntekt(cap6G(årsinntekt, spa.perioder.first().fom))
 
         var infotrygdTilUtbetaling =
             infotrygd.vedtakListe.filter { it.utbetalingsgrad != null && it.utbetalingsgrad > 0 }
         val spaTilUtbetaling = spa.perioder.filter { it.dagsats > 0 }
+
+        if (infotrygdTilUtbetaling.isEmpty()) return Either.Left(
+            vedtakSammenlikningsFeilMetered(
+                SammenlikningsFeilÅrsak.INFOTRYGD_INGEN_UTBETALINGSPERIODER,
+                "fant ingen utbetalingsperioder med utbetalingsgrad > 0",
+                grunnlag = infotrygd.vedtakListe.toString()
+            )
+        )
 
         if (infotrygdTilUtbetaling.size != spaTilUtbetaling.size) {
             val sammenslåttInfotrygdVedtak = slåSammenInfotrygdVedtak(infotrygdTilUtbetaling)
@@ -201,6 +210,7 @@ enum class SammenlikningsFeilÅrsak {
     INFOTRYGD_HULL_I_VEDTAKSPERIODE,
     INFOTRYGD_FLERE_GRADERINGER_I_VEDTAK,
     INFOTRYGD_INGEN_ARBEIDSFORHOLD,
+    INFOTRYGD_INGEN_UTBETALINGSPERIODER,
     ULIKT_ANTALL_PERIODER_TIL_UTBETALING,
     VEDTAK_FOR_PERIODENE_MATCHER_IKKE,
     VEDTAK_FOR_PERIODE_MATCHER_IKKE,
@@ -218,6 +228,11 @@ fun graderDagsats(dagsats: Long, utbetalingsgrad: Int) = BigDecimal.valueOf(dags
 fun dagsatsAvÅrsinntekt(årsinntekt: Long) = BigDecimal.valueOf(årsinntekt)
     .divide(BigDecimal(arbeidsdagerPrÅr), 0, RoundingMode.HALF_UP)
     .longValueExact()
+
+fun cap6G(årsinntekt: Long, dato: LocalDate) : Long {
+    val G6 = getGrunnbeløpForDato(dato) * 6
+    return if (årsinntekt > G6) G6 else årsinntekt
+}
 
 fun årsinntekt(arbeidsforholdListe: List<Arbeidsforhold>): Either<String, Long> = // TODO: metrics for antall arbeidsforhold
     Either.right(
