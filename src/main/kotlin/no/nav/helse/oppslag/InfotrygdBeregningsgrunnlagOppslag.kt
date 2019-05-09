@@ -1,7 +1,9 @@
 package no.nav.helse.oppslag
 
 import arrow.core.Either
+import com.fasterxml.jackson.annotation.JsonCreator
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
+import com.fasterxml.jackson.annotation.JsonValue
 import com.github.kittinunf.fuel.httpGet
 import no.nav.helse.streams.defaultObjectMapper
 import org.slf4j.LoggerFactory
@@ -62,8 +64,19 @@ data class InfotrygdVedtak(
         val anvistPeriode : AnvistPeriode,
         val utbetalingsgrad : Int?)
 
-enum class InntektsPeriodeVerdi {
-    Å, M, F, U, D, X
+enum class InntektsPeriodeVerdi(val infotrygdKonstant : String) {
+    ÅR("Å"),
+    MÅNED("M"),
+    FJORTENDAGER("F"),
+    UKE("U"),
+    DAG("D"),
+    SKJØNNSFASTSATT("X");
+
+    @JsonCreator
+    fun forValue(value: String) = values().filter { it.infotrygdKonstant == value }.firstOrNull()
+
+    @JsonValue
+    fun toValue() = this.infotrygdKonstant
 }
 
 @JsonIgnoreProperties(ignoreUnknown = true)

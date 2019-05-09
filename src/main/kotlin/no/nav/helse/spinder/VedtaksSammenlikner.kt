@@ -266,11 +266,11 @@ fun årsinntekt(arbeidsforholdListe: List<Arbeidsforhold>): Long = // TODO: metr
     arbeidsforholdListe.map { arbeidsforhold ->
         inntektsPeriodeVerdiCounter.labels(arbeidsforhold.inntektsPeriode.value.toString()).inc()
         when (arbeidsforhold.inntektsPeriode.value) {
-            InntektsPeriodeVerdi.M -> arbeidsforhold.inntektForPerioden * 12L
-            InntektsPeriodeVerdi.D -> arbeidsforhold.inntektForPerioden * arbeidsdagerPrÅr.toLong()
-            InntektsPeriodeVerdi.Å -> arbeidsforhold.inntektForPerioden.toLong()
-            InntektsPeriodeVerdi.U -> arbeidsforhold.inntektForPerioden * 52L // ??
-            InntektsPeriodeVerdi.F -> arbeidsforhold.inntektForPerioden * 26L // ??,
-            InntektsPeriodeVerdi.X -> arbeidsforhold.inntektForPerioden.toLong() // skjønnsmessig fastsatt årsinntekt
+            InntektsPeriodeVerdi.MÅNED-> arbeidsforhold.inntektForPerioden * 12L
+            InntektsPeriodeVerdi.DAG -> arbeidsforhold.inntektForPerioden * arbeidsdagerPrÅr.toLong()
+            InntektsPeriodeVerdi.ÅR -> arbeidsforhold.inntektForPerioden.toLong()
+            InntektsPeriodeVerdi.UKE -> arbeidsforhold.inntektForPerioden * 52L // ??
+            InntektsPeriodeVerdi.FJORTENDAGER -> arbeidsforhold.inntektForPerioden * 26L // ??,
+            InntektsPeriodeVerdi.SKJØNNSFASTSATT -> arbeidsforhold.inntektForPerioden.toLong() // skjønnsmessig fastsatt årsinntekt
         }
     }.reduce(Long::plus)
