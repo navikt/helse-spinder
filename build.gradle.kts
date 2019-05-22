@@ -40,8 +40,6 @@ dependencies {
     compile("no.nav:vault-jdbc:1.3.1")
     compile("org.postgresql:postgresql:42.2.5")
 
-    compile("commons-lang:commons-lang:2.6")
-
     testCompile("com.h2database:h2:1.4.199")
     testCompile("org.junit.jupiter:junit-jupiter-api:$junitJupiterVersion")
     testRuntime("org.junit.jupiter:junit-jupiter-engine:$junitJupiterVersion")

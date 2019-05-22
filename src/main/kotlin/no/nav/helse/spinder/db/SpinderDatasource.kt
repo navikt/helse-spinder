@@ -4,7 +4,6 @@ import com.zaxxer.hikari.HikariConfig
 import com.zaxxer.hikari.HikariDataSource
 import no.nav.helse.Environment
 import no.nav.vault.jdbc.hikaricp.HikariCPVaultUtil
-import org.apache.commons.lang.StringUtils
 import org.flywaydb.core.Flyway
 import org.flywaydb.core.api.configuration.ClassicConfiguration
 
@@ -26,8 +25,8 @@ fun migrate(dataSource: HikariDataSource, env : Environment) {
     flyway.migrate()
 }
 
-private fun inneholderKunAlfanumeriskOgStrek(s: String) =
-    StringUtils.isAlphanumeric(s.replace('-', 'a').replace('_', 'a'))
+fun inneholderKunAlfanumeriskOgStrek(s: String) =
+        Regex("^[a-zA-Z0-9_-]+$").matches(s)
 
 fun makeDatasource(env : Environment) : HikariDataSource {
     val config = HikariConfig()
