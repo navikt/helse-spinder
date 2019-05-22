@@ -21,10 +21,10 @@ data class Environment(
         // else
         var dbUsername: String = getEnvVar("DATABASE_USERNAME", "spinder"),
         val dbPassword: String = getEnvVar("DATABASE_PASSWORD", "spinder"),
+        // end if (dbUseVault)
         val ventTimerFørMatcheForsøk: Long = 24*3,
         val ventMinutterMellomHvertNyeForsøk: Long = 60,
         val maksAlderPåSpaVedtakSomSkalSjekkesIDager: Long = 21
-        // end if (dbUseVault)
 
 )
 
