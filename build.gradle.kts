@@ -29,14 +29,26 @@ dependencies {
     compile("io.ktor:ktor-server-netty:$ktorVersion")
     compile("io.prometheus:simpleclient_common:$prometheusVersion")
     compile("io.prometheus:simpleclient_hotspot:$prometheusVersion")
-    compile("no.nav.helse:streams:$navStreamsVersion")
     compile("com.github.kittinunf.fuel:fuel:$fuelVersion")
     compile("io.arrow-kt:arrow-core-data:$arrowVersion")
 
+
+    compile("org.apache.kafka:kafka-streams:2.1.1")
+    compile("no.nav.helse:streams:$navStreamsVersion")
+
+    compile("org.flywaydb:flyway-core:5.2.3")
+    compile("no.nav:vault-jdbc:1.3.1")
+    compile("org.postgresql:postgresql:42.2.5")
+
+    compile("commons-lang:commons-lang:2.6")
+
+    testCompile("com.h2database:h2:1.4.199")
     testCompile("org.junit.jupiter:junit-jupiter-api:$junitJupiterVersion")
     testRuntime("org.junit.jupiter:junit-jupiter-engine:$junitJupiterVersion")
     testCompile("org.assertj:assertj-core:$assertJVersion")
-    testCompile ("no.nav:kafka-embedded-env:2.0.1")
+
+    testCompile ("org.apache.kafka:kafka_2.12:2.1.1") // overrides 2.0.1 in kafka-embedded
+    testCompile ("no.nav:kafka-embedded-env:2.1.1")
     testCompile("com.github.tomakehurst:wiremock:2.19.0") {
         exclude(group = "junit")
     }

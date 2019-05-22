@@ -4,12 +4,19 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import java.time.LocalDate
 import java.time.LocalDateTime
 
+fun dupliserMenMedVurderingstidspunkt(behandling: BehandlingOK, vurderingstidspunkt: LocalDateTime) : BehandlingOK =
+    BehandlingOK(
+        originalSøknad = behandling.originalSøknad.copy(id = behandling.originalSøknad.id + "_" + System.currentTimeMillis().toString()),
+        vedtak = behandling.vedtak.copy(),
+        avklarteVerdier = AvklarteVerdier(Medlemsskap(vurderingstidspunkt))
+    )
+
+
 @JsonIgnoreProperties(ignoreUnknown = true)
 data class BehandlingOK(
     val originalSøknad:Søknad,
     val vedtak:Vedtak,
     val avklarteVerdier:AvklarteVerdier
-
 )
 
 @JsonIgnoreProperties(ignoreUnknown = true)
@@ -28,7 +35,8 @@ data class Søknad(
     val aktorId: String,
     val type: String,
     val fom: LocalDate,
-    val tom: LocalDate
+    val tom: LocalDate,
+    val sendtNav:LocalDateTime
 )
 
 @JsonIgnoreProperties(ignoreUnknown = true)
