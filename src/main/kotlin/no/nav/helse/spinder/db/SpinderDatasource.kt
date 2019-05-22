@@ -30,7 +30,7 @@ fun inneholderKunAlfanumeriskOgStrek(s: String) =
 
 fun makeDatasource(env : Environment) : HikariDataSource {
     val config = HikariConfig()
-    config.jdbcUrl = env.dbUrl //"jdbc:h2:mem:testdb" //;MODE=PostgreSQL"
+    config.jdbcUrl = env.dbUrl
     config.minimumIdle = 0
     config.maxLifetime = 30001
     config.maximumPoolSize = 2
