@@ -16,10 +16,6 @@ class TestdataTest {
         val behandling:BehandlingOK = defaultObjectMapper.readValue(Vedtak::class.java.
             classLoader.getResourceAsStream("vedtak_1.json"))
 
-        println(defaultObjectMapper.writeValueAsString(
-            behandling
-        ))
-
         assertEquals(infotrygd.sykepengerListe[0].vedtakListe[0].anvistPeriode.fom, behandling.vedtak.perioder[0].fom)
         assertEquals(infotrygd.sykepengerListe[0].vedtakListe[0].anvistPeriode.tom, behandling.vedtak.perioder[0].tom)
         assertEquals(dagsatsAvÅrsinntekt(årsinntekt(infotrygd.sykepengerListe[0].arbeidsforholdListe)), behandling.vedtak.perioder[0].dagsats)
