@@ -38,8 +38,7 @@ fun makeDatasource(env : Environment) : HikariDataSource {
     config.connectionTimeout = 250
     config.idleTimeout = 10001
     return if (env.dbUseVault) {
-        config.connectionInitSql = "set role "
-        val ds = HikariCPVaultUtil.createHikariDataSourceWithVaultIntegration(config, "postgresql/preprod", "testdb-user")
+        val ds = HikariCPVaultUtil.createHikariDataSourceWithVaultIntegration(config, env.dbVaultMountpath, env.dbVaultRole)
         if (ds == null) throw Exception("vault integrated datasource is null") else ds
     } else {
         config.username = env.dbUsername
