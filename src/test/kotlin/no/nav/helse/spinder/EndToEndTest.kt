@@ -119,7 +119,7 @@ class EndToEndTest {
                 maksAlderPåSpaVedtakSomSkalSjekkesIDager = 3650
             )
 
-            app = App(env) //SpinderStream(env, "spinder_e2e")
+            app = App(env)
             app.start()
         }
 
