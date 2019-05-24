@@ -54,7 +54,7 @@ class EndToEndTest {
     @Test
     fun håndterSøppelMelding() {
         restStsStub()
-        val logAppender = lagLogAppender(SpinderStream::class.java.name)
+        val logAppender = lagSpinderStreamLogAppender()
 
         produceOneMessage("12345678901234567890", "{ \"blørrilørribu\" : 123123123 }")
 
@@ -84,7 +84,7 @@ class EndToEndTest {
 
         val server: WireMockServer = WireMockServer(WireMockConfiguration.options().dynamicPort())
 
-        private lateinit var app: App
+        private lateinit var app: SpinderStream
 
         @BeforeAll
         @JvmStatic
@@ -112,14 +112,10 @@ class EndToEndTest {
                 kafkaPassword = password,
                 bootstrapServersUrl = embeddedEnvironment.brokersURL,
                 sparkelBaseUrl = server.baseUrl(),
-                stsRestUrl = server.baseUrl(),
-                dbUrl = "jdbc:h2:mem:testdb;DB_CLOSE_DELAY=-1",
-                ventMinutterMellomHvertNyeForsøk = 0,
-                ventTimerFørMatcheForsøk = 0,
-                maksAlderPåSpaVedtakSomSkalSjekkesIDager = 3650
+                stsRestUrl = server.baseUrl()
             )
 
-            app = App(env)
+            app = SpinderStream(env, "spinder_e2e")
             app.start()
         }
 
@@ -144,16 +140,15 @@ class EndToEndTest {
         restStsStub()
         infotrygdBeregningsgrunnlagStub(aktørId, getResourceAsInfotrygdBeregningsgrunnlag(infotrygdOppslagResource))
 
-        val logAppender = lagLogAppender()
+        val logAppender = lagSpinderStreamLogAppender()
 
         produceOneMessage(behandling.originalSøknad.id, behandlingString)
 
         return ventPåEnLoggLinje(logAppender)
     }
 
-
-    private fun lagLogAppender(loggerName:String = SpinderMatcher::class.java.name): ListAppender<ILoggingEvent> {
-        val spinderStreamLogger: Logger = LoggerFactory.getLogger(loggerName) as Logger
+    private fun lagSpinderStreamLogAppender(): ListAppender<ILoggingEvent> {
+        val spinderStreamLogger: Logger = LoggerFactory.getLogger(SpinderStream::class.java.name) as Logger
         val listAppender = ListAppender<ILoggingEvent>();
         listAppender.start();
         spinderStreamLogger.addAppender(listAppender);
