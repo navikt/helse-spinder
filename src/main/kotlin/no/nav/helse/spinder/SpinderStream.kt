@@ -6,6 +6,7 @@ import io.prometheus.client.Counter
 import no.nav.helse.Environment
 import no.nav.helse.oppslag.InfotrygdBeregningsgrunnlagOppslag
 import no.nav.helse.oppslag.StsRestClient
+import no.nav.helse.spinder.db.SpinderDb
 import no.nav.helse.streams.StreamConsumer
 import no.nav.helse.streams.Topics.VEDTAK_SYKEPENGER
 import no.nav.helse.streams.consumeTopic
@@ -21,27 +22,11 @@ import org.slf4j.LoggerFactory
 import java.time.LocalDateTime
 import java.util.*
 
-class SpinderStream(val env: Environment, private val appId : String) {
-
-    private val stsClient = StsRestClient(baseUrl = env.stsRestUrl, username = env.username, password = env.password)
+class SpinderStream(val env: Environment, private val appId : String, private val db: SpinderDb) {
 
     private val consumer: StreamConsumer
 
     private val log = LoggerFactory.getLogger(SpinderStream::class.java.name)
-
-    private val MATCH = "match";
-    private val MISMATCH = "mismatch";
-    private val INGENDATA = "ingendata";
-    private val SPA_VEDTAK_DESERIALISERINGSFEIL = "spa_vedtak_deserialiseringsfeil";
-    private val INFOTRYGD_OPPSLAGSFEIL = "infotrygd_oppslagsfeil";
-
-    private val matcheCounter = Counter.build()
-        .name("spinder_match_attempts_totals")
-        .labelNames("resultat")
-        .help("antall matcheforsøk gjort, fordelt på $MATCH, $MISMATCH, $INGENDATA (i.e: fant ikke vedtak i infotrygd), $SPA_VEDTAK_DESERIALISERINGSFEIL, $INFOTRYGD_OPPSLAGSFEIL")
-        .register()
-
-    private val infotrygd = InfotrygdBeregningsgrunnlagOppslag(env.sparkelBaseUrl, stsClient)
 
     init {
         val streamConfig = if ("true" == env.plainTextKafka) streamConfigPlainTextKafka() else streamConfig(
@@ -74,29 +59,11 @@ class SpinderStream(val env: Environment, private val appId : String) {
         builder.consumeTopic(VEDTAK_SYKEPENGER)
             .foreach { _, value ->
                 value.deserializeSpaSykepengeVedtak().bimap({
-                    matcheCounter.labels(SPA_VEDTAK_DESERIALISERINGSFEIL).inc()
+                    //matcheCounter.labels(SPA_VEDTAK_DESERIALISERINGSFEIL).inc()
                     log.error("SpaSykepengeVedtak deserialiserings feil", it)
                 }, { behandlingOk ->
-                    if (skalSjekkes(behandlingOk)) {
-                        hentInfotrygdGrunnlagForBehanding(behandlingOk).bimap({
-                            matcheCounter.labels(INFOTRYGD_OPPSLAGSFEIL).inc()
-                            log.error(
-                                "Feil ved hentInfotrygdGrunnlagForBehanding for søknadId=${behandlingOk.originalSøknad.id}",
-                                it
-                            )
-                        }, { infotrygdBeregningsgrunnlag ->
-                            sammenliknVedtak(infotrygdBeregningsgrunnlag, behandlingOk).bimap({
-                                matcheCounter.labels(if (it.feilArsaksType == SammenlikningsFeilÅrsak.INFOTRYGD_MANGLER_VEDTAK) INGENDATA else MISMATCH)
-                                    .inc()
-                                log.info("VedtaksSammenlikningsFeil for søknadId=${behandlingOk.originalSøknad.id}: ${it}")
-                            }, {
-                                matcheCounter.labels(MATCH).inc()
-                                log.info("VedtaksSammenlikningsMatch for søknadId=${behandlingOk.originalSøknad.id}: ${it}")
-                            })
-                        })
-                    } else {
-                        log.info("Behandlingstidpunkt utenfor tidsvindu: ${behandlingOk.avklarteVerdier.medlemsskap.vurderingstidspunkt}")
-                    }
+                    db.lagreNyttSpaVedtak(behandlingOk)
+
                 })
             }
         return builder.build()
@@ -110,12 +77,6 @@ class SpinderStream(val env: Environment, private val appId : String) {
         }
 
 
-    private fun hentInfotrygdGrunnlagForBehanding(behandling: BehandlingOK) =
-        infotrygd.hentInfotrygdBeregningsgrunnlag(
-            behandling.originalSøknad.aktorId,
-            behandling.originalSøknad.fom,
-            behandling.originalSøknad.tom
-        )
 
     fun start() {
         consumer.start()

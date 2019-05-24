@@ -91,21 +91,21 @@ jobs:
                  -H "Accept: application/vnd.github.ant-man-preview+json" \
                  https://api.github.com/repos/navikt/helse-spinder/deployments
           fi
-    - run:
-        name: deploy to prod
-        command: |
-          set -e
-          docker create -v /nais --name naisyamlprod alpine:3.4 /bin/true
-          docker cp deploy/prod.yaml naisyamlprod:/nais
-          if [ -z "${CIRCLE_PULL_REQUEST}" ] && [ "${CIRCLE_BRANCH}" = "master" ]; then
-             PROD_NAISERATOR=$(docker run --volumes-from naisyamlprod mikefarah/yq yq r /nais/prod.yaml -j)
-             PROD_NAISERATOR=$(echo $PROD_NAISERATOR | jq '.spec.image = "'$DOCKER_IMG_NAME':'$COMMIT_SHORT'"' -c)
-             PROD_DEPLOYMENT=$(cat deploy/deployreq.json | jq '.payload.kubernetes.resources += ['$PROD_NAISERATOR']')
-             PROD_DEPLOYMENT=$(echo $PROD_DEPLOYMENT | jq '.environment = "prod-fss"')
-             PROD_DEPLOYMENT=$(echo $PROD_DEPLOYMENT | jq '.ref = "'$COMMIT_SHORT'"')
-             curl -i -n --fail \
-                 -X POST \
-                 -d "$PROD_DEPLOYMENT" \
-                 -H "Accept: application/vnd.github.ant-man-preview+json" \
-                 https://api.github.com/repos/navikt/helse-spinder/deployments
-          fi
+    #- run:
+    #    name: deploy to prod
+    #    command: |
+    #      set -e
+    #      docker create -v /nais --name naisyamlprod alpine:3.4 /bin/true
+    #      docker cp deploy/prod.yaml naisyamlprod:/nais
+    #      if [ -z "${CIRCLE_PULL_REQUEST}" ] && [ "${CIRCLE_BRANCH}" = "master" ]; then
+    #         PROD_NAISERATOR=$(docker run --volumes-from naisyamlprod mikefarah/yq yq r /nais/prod.yaml -j)
+    #         PROD_NAISERATOR=$(echo $PROD_NAISERATOR | jq '.spec.image = "'$DOCKER_IMG_NAME':'$COMMIT_SHORT'"' -c)
+    #         PROD_DEPLOYMENT=$(cat deploy/deployreq.json | jq '.payload.kubernetes.resources += ['$PROD_NAISERATOR']')
+    #         PROD_DEPLOYMENT=$(echo $PROD_DEPLOYMENT | jq '.environment = "prod-fss"')
+    #         PROD_DEPLOYMENT=$(echo $PROD_DEPLOYMENT | jq '.ref = "'$COMMIT_SHORT'"')
+    #         curl -i -n --fail \
+    #             -X POST \
+    #             -d "$PROD_DEPLOYMENT" \
+    #             -H "Accept: application/vnd.github.ant-man-preview+json" \
+    #             https://api.github.com/repos/navikt/helse-spinder/deployments
+    #      fi
