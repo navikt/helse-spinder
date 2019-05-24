@@ -63,10 +63,11 @@ class SpinderStream(val env: Environment, private val appId : String) {
     }
 
     private fun skalSjekkes(behandlingOK: BehandlingOK) : Boolean {
-        val tidligst = LocalDateTime.now().minusWeeks(3)
+        /*val tidligst = LocalDateTime.now().minusWeeks(3)
         val senest = LocalDateTime.now().minusDays(3)
         val behandlet = behandlingOK.avklarteVerdier.medlemsskap.vurderingstidspunkt
-        return (behandlet >= tidligst && behandlet <= senest)
+        return (behandlet >= tidligst && behandlet <= senest)*/
+        return true
     }
 
     private fun topology(): Topology {
