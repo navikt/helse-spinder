@@ -9,7 +9,13 @@ private val log = LoggerFactory.getLogger("Spinder")
 private val kafkaAppId = "spinder-avstemmer-1"
 
 fun main() {
-    val env = Environment()
+    Thread {
+        while (true) {
+            log.info("Spinder disabled / on hold")
+            Thread.sleep(1000 * 60 * 60 * 24)
+        }
+    }.start()
+    /*val env = Environment()
     if (env.resetStreamOnly) {
         log.info("SpinderStreamResetter starter.")
         val spinderResetter = SpinderStreamResetter(env, kafkaAppId)
@@ -26,5 +32,5 @@ fun main() {
         val spinder = SpinderStream(env, kafkaAppId)
         log.info("The Spinder is open for E-Match")
         spinder.start()
-    }
+    }*/
 }
